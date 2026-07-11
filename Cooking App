@@ -1,0 +1,623 @@
+<style>
+  #kitchen-app {
+    --chalk-bg: #1f2a24;
+    --chalk-bg-2: #26332b;
+    --chalk-white: #f3f1e7;
+    --chalk-dim: #b9c2b6;
+    --tomato: #d3542f;
+    --corn: #e0ac2e;
+    --herb: #7fa06f;
+    --line: rgba(243,241,231,0.16);
+    --receipt-bg: #f3f1e7;
+    --receipt-ink: #2a2a25;
+
+    font-family: 'WorkSans', 'Segoe UI', sans-serif;
+    background: var(--chalk-bg);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.04), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(255,255,255,0.03), transparent 55%);
+    color: var(--chalk-white);
+    padding: 28px 18px 60px;
+    min-height: 100%;
+    box-sizing: border-box;
+  }
+
+  #kitchen-app * { box-sizing: border-box; }
+
+  @font-face {
+    font-family: 'ChalkHand';
+    src: local('Caveat');
+  }
+
+  .ka-wrap { max-width: 760px; margin: 0 auto; }
+
+  .ka-header { text-align: center; margin-bottom: 26px; }
+  .ka-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--corn);
+    margin: 0 0 6px;
+  }
+  .ka-title {
+    font-family: 'Caveat', cursive;
+    font-size: 52px;
+    line-height: 1;
+    margin: 0;
+    color: var(--chalk-white);
+    text-shadow: 0 0 18px rgba(224,172,46,0.15);
+  }
+  .ka-sub {
+    font-size: 13.5px;
+    color: var(--chalk-dim);
+    margin: 8px 0 0;
+  }
+
+  /* ---- FORM CARD ---- */
+  .ka-card {
+    background: var(--chalk-bg-2);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 22px 22px 24px;
+    margin-bottom: 22px;
+  }
+  .ka-card-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--herb);
+    margin: 0 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ka-card-title::before { content: "○"; color: var(--tomato); }
+
+  .ka-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 16px;
+  }
+  .ka-field { display: flex; flex-direction: column; gap: 6px; }
+  .ka-field.full { grid-column: 1 / -1; }
+  .ka-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--chalk-dim);
+  }
+  .ka-field select,
+  .ka-field input[type="number"],
+  .ka-field input[type="text"],
+  .ka-field textarea {
+    background: rgba(243,241,231,0.06);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    color: var(--chalk-white);
+    padding: 9px 10px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+  }
+  .ka-field select:focus,
+  .ka-field input:focus,
+  .ka-field textarea:focus {
+    border-color: var(--corn);
+    box-shadow: 0 0 0 2px rgba(224,172,46,0.18);
+  }
+  .ka-field textarea { resize: vertical; min-height: 54px; }
+
+  .ka-chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ka-chip {
+    border: 1px solid var(--line);
+    background: rgba(243,241,231,0.04);
+    color: var(--chalk-dim);
+    border-radius: 999px;
+    padding: 6px 13px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .ka-chip:hover { border-color: var(--herb); }
+  .ka-chip.active {
+    background: var(--herb);
+    border-color: var(--herb);
+    color: #16201a;
+    font-weight: 600;
+  }
+
+  .ka-currency { display:flex; gap:6px; }
+  .ka-currency button {
+    flex: 0 0 auto;
+    background: rgba(243,241,231,0.06);
+    border: 1px solid var(--line);
+    color: var(--chalk-dim);
+    border-radius: 4px;
+    width: 34px; height: 34px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .ka-currency button.active { background: var(--corn); color:#231a08; border-color: var(--corn); font-weight:700; }
+
+  .ka-submit {
+    margin-top: 20px;
+    width: 100%;
+    background: var(--tomato);
+    color: var(--chalk-white);
+    border: none;
+    border-radius: 5px;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform .1s ease, background .15s ease;
+  }
+  .ka-submit:hover:not(:disabled) { background: #b8471f; }
+  .ka-submit:active:not(:disabled) { transform: scale(0.99); }
+  .ka-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  .ka-error {
+    background: rgba(211,84,47,0.12);
+    border: 1px solid var(--tomato);
+    color: #ffb59b;
+    padding: 10px 12px;
+    border-radius: 5px;
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
+
+  /* ---- LOADING ---- */
+  .ka-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    padding: 30px 0;
+    color: var(--chalk-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+  }
+  .ka-spinner {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--corn);
+    animation: ka-spin 0.8s linear infinite;
+  }
+  @keyframes ka-spin { to { transform: rotate(360deg); } }
+
+  /* ---- RESULTS ---- */
+  .ka-results { display: none; }
+  .ka-results.show { display: block; animation: ka-fade .35s ease; }
+  @keyframes ka-fade { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+
+  .ka-section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--corn);
+    margin: 30px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .ka-section-label::after {
+    content: "";
+    flex: 1;
+    border-top: 1px dashed var(--line);
+  }
+
+  .ka-meals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .ka-plate {
+    background: var(--chalk-bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 16px 14px;
+    position: relative;
+  }
+  .ka-plate-ring {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: 2px solid var(--herb);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; margin-bottom: 10px;
+  }
+  .ka-plate-meal { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color: var(--chalk-dim); margin-bottom:4px; }
+  .ka-plate-name { font-size: 15.5px; font-weight: 600; color: var(--chalk-white); margin-bottom: 6px; line-height:1.25; }
+  .ka-plate-desc { font-size: 12.5px; color: var(--chalk-dim); line-height:1.5; margin-bottom: 8px; }
+  .ka-plate-time { font-size: 11px; color: var(--corn); font-family:'JetBrains Mono',monospace; }
+
+  /* receipt */
+  .ka-receipt {
+    background: var(--receipt-bg);
+    color: var(--receipt-ink);
+    border-radius: 2px;
+    padding: 22px 22px 26px;
+    font-family: 'JetBrains Mono', monospace;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  .ka-receipt::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -9px; height: 18px;
+    background:
+      linear-gradient(135deg, var(--receipt-bg) 50%, transparent 50%) 0 0/16px 18px repeat-x,
+      linear-gradient(-135deg, var(--receipt-bg) 50%, transparent 50%) 0 0/16px 18px repeat-x;
+    background-position: 0 0, 8px 0;
+  }
+  .ka-receipt-title { text-align:center; font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 4px; }
+  .ka-receipt-sub { text-align:center; font-size: 10.5px; color:#6b6b60; margin-bottom: 14px; }
+  .ka-receipt-hr { border-top: 1px dashed #8a8a7a; margin: 10px 0; }
+  .ka-rline {
+    display:flex; justify-content: space-between; gap: 10px;
+    font-size: 12.5px; padding: 4px 0;
+  }
+  .ka-rline .qty { color: #6b6b60; min-width: 46px; }
+  .ka-rline .name { flex: 1; }
+  .ka-rline .cost { font-weight: 600; }
+  .ka-receipt-total { display:flex; justify-content: space-between; font-size: 14px; font-weight: 700; padding-top: 8px; }
+
+  .ka-stamp {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 8px 16px;
+    border: 3px solid;
+    border-radius: 6px;
+    font-family: 'Caveat', cursive;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    transform: rotate(-4deg);
+  }
+  .ka-stamp.ok { color: var(--herb); border-color: var(--herb); background: rgba(127,160,111,0.35); }
+  .ka-stamp.warn { color: var(--tomato); border-color: var(--tomato); background: rgba(211,84,47,0.35); }
+  .ka-budget-note { font-size: 12px; color:#4a4a40; margin-top: 10px; line-height:1.5; }
+
+  /* substitutions */
+  .ka-subs { display: flex; flex-direction: column; gap: 10px; }
+  .ka-sub-row {
+    background: var(--chalk-bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ka-sub-swap { display:flex; align-items:center; gap:8px; font-size: 13.5px; }
+  .ka-sub-orig { color: var(--chalk-dim); text-decoration: line-through; }
+  .ka-sub-arrow { color: var(--corn); }
+  .ka-sub-new { color: var(--chalk-white); font-weight: 600; }
+  .ka-sub-reason { font-size: 11.5px; color: var(--chalk-dim); margin-left: auto; font-style: italic; }
+
+  .ka-again {
+    display:block; margin: 30px auto 0; background: none;
+    border: 1px solid var(--line); color: var(--chalk-dim);
+    border-radius: 999px; padding: 9px 18px; font-size: 12.5px; cursor: pointer;
+  }
+  .ka-again:hover { border-color: var(--corn); color: var(--corn); }
+
+  @media (max-width: 560px) {
+    .ka-grid { grid-template-columns: 1fr; }
+    .ka-meals { grid-template-columns: 1fr; }
+    .ka-title { font-size: 40px; }
+  }
+</style>
+
+<div id="kitchen-app">
+  <div class="ka-wrap">
+    <div class="ka-header">
+      <p class="ka-eyebrow">Today's Kitchen Board</p>
+      <h1 class="ka-title">What's Cooking Today?</h1>
+      <p class="ka-sub">Tell it about your day — it'll chalk up a plan, a grocery run, and swaps if you're short on something.</p>
+    </div>
+
+    <div class="ka-card">
+      <p class="ka-card-title">Your day</p>
+      <div class="ka-grid">
+        <div class="ka-field">
+          <label class="ka-label">How busy is today</label>
+          <select id="ka-busy">
+            <option value="slammed">Slammed — barely any time</option>
+            <option value="normal" selected>Normal — some breathing room</option>
+            <option value="relaxed">Relaxed — happy to cook properly</option>
+          </select>
+        </div>
+        <div class="ka-field">
+          <label class="ka-label">Max cook time per meal</label>
+          <select id="ka-time">
+            <option value="15 minutes">Under 15 min</option>
+            <option value="30 minutes" selected>Under 30 min</option>
+            <option value="60 minutes">Under an hour</option>
+            <option value="no real limit">No real limit</option>
+          </select>
+        </div>
+        <div class="ka-field">
+          <label class="ka-label">Cooking for</label>
+          <input type="number" id="ka-people" min="1" max="12" value="2" />
+        </div>
+        <div class="ka-field">
+          <label class="ka-label">Budget for the whole day</label>
+          <div style="display:flex; gap:8px;">
+            <div class="ka-currency" id="ka-currency">
+              <button type="button" data-c="₹" class="active">₹</button>
+              <button type="button" data-c="$">$</button>
+              <button type="button" data-c="€">€</button>
+              <button type="button" data-c="£">£</button>
+            </div>
+            <input type="number" id="ka-budget" min="0" placeholder="e.g. 500" style="flex:1;" />
+          </div>
+        </div>
+        <div class="ka-field full">
+          <label class="ka-label">Dietary style</label>
+          <div class="ka-chip-row" id="ka-diet">
+            <div class="ka-chip active" data-v="No restrictions">No restrictions</div>
+            <div class="ka-chip" data-v="Vegetarian">Vegetarian</div>
+            <div class="ka-chip" data-v="Vegan">Vegan</div>
+            <div class="ka-chip" data-v="Eggetarian">Eggetarian</div>
+            <div class="ka-chip" data-v="Gluten-free">Gluten-free</div>
+            <div class="ka-chip" data-v="Dairy-free">Dairy-free</div>
+          </div>
+        </div>
+        <div class="ka-field full">
+          <label class="ka-label">Already have on hand (optional)</label>
+          <textarea id="ka-onhand" placeholder="e.g. rice, onions, half a bottle of milk, eggs"></textarea>
+        </div>
+        <div class="ka-field full">
+          <label class="ka-label">Cuisine leaning (optional)</label>
+          <input type="text" id="ka-cuisine" placeholder="e.g. South Indian, quick Italian, no preference" />
+        </div>
+      </div>
+      <button class="ka-submit" id="ka-submit">Build my cooking plan</button>
+    </div>
+
+    <div id="ka-error-slot"></div>
+    <div class="ka-loading" id="ka-loading" style="display:none;">
+      <div class="ka-spinner"></div>
+      <span id="ka-loading-text">Chalking up your plan…</span>
+    </div>
+
+    <div class="ka-results" id="ka-results"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const root = document.getElementById('kitchen-app');
+  const $ = (sel) => root.querySelector(sel);
+
+  // link fonts
+  if (!document.getElementById('ka-fonts')) {
+    const link = document.createElement('link');
+    link.id = 'ka-fonts';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Work+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap';
+    document.head.appendChild(link);
+  }
+  root.style.fontFamily = "'Work Sans', 'Segoe UI', sans-serif";
+
+  let currency = '₹';
+  let diet = 'No restrictions';
+
+  $('#ka-currency').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    root.querySelectorAll('#ka-currency button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currency = btn.dataset.c;
+  });
+
+  $('#ka-diet').addEventListener('click', (e) => {
+    const chip = e.target.closest('.ka-chip');
+    if (!chip) return;
+    root.querySelectorAll('#ka-diet .ka-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    diet = chip.dataset.v;
+  });
+
+  const loadingMessages = [
+    "Chalking up your plan…",
+    "Sorting the pantry…",
+    "Doing the grocery math…",
+    "Stamping the budget…"
+  ];
+
+  function showError(msg) {
+    $('#ka-error-slot').innerHTML = `<div class="ka-error">${msg}</div>`;
+  }
+  function clearError() { $('#ka-error-slot').innerHTML = ''; }
+
+  function escapeHtml(str) {
+    return (str ?? '').toString()
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function buildPrompt(input) {
+    return `You are a practical home-cooking planner. Based on the person's day, build a realistic cooking plan.
+
+Inputs:
+- Business of day: ${input.busy}
+- Max cook time per meal: ${input.time}
+- Cooking for: ${input.people} people
+- Budget for the whole day: ${input.currency}${input.budget || 'not specified'}
+- Dietary style: ${input.diet}
+- Ingredients already on hand: ${input.onhand || 'none specified'}
+- Cuisine leaning: ${input.cuisine || 'no strong preference'}
+
+Respond with ONLY a raw JSON object (no markdown fences, no preamble, no commentary), matching exactly this shape:
+
+{
+  "meals": {
+    "breakfast": {"name": "string", "description": "one short sentence", "time_minutes": number},
+    "lunch": {"name": "string", "description": "one short sentence", "time_minutes": number},
+    "dinner": {"name": "string", "description": "one short sentence", "time_minutes": number}
+  },
+  "grocery_list": [
+    {"item": "string", "quantity": "string, short e.g. '2' or '250g'", "estimated_cost": number}
+  ],
+  "substitutions": [
+    {"original": "string ingredient from the grocery list or recipe", "substitute": "string", "reason": "short reason, under 8 words"}
+  ],
+  "budget": {
+    "estimated_total": number,
+    "feasible": boolean,
+    "notes": "one or two short sentences explaining feasibility and any trade-off suggested if over budget"
+  }
+}
+
+Rules:
+- Respect the max cook time per meal for every dish.
+- Respect the dietary style strictly.
+- Only include grocery items NOT already on hand where reasonable; still list small items needed even if similar to what's on hand.
+- estimated_cost values are per-item cost in ${input.currency}, and should sum roughly to budget.estimated_total.
+- Give 3-5 substitutions max, focused on realistic budget-friendly or on-hand swaps.
+- If a budget was specified, judge feasibility against it honestly. If no budget was specified, set feasible to true and note that no budget was given.
+- Keep all text concise. No extra keys. No trailing commentary outside the JSON.`;
+  }
+
+  async function generatePlan() {
+    clearError();
+    const input = {
+      busy: $('#ka-busy').value,
+      time: $('#ka-time').value,
+      people: $('#ka-people').value || '2',
+      budget: $('#ka-budget').value,
+      currency,
+      diet,
+      onhand: $('#ka-onhand').value.trim(),
+      cuisine: $('#ka-cuisine').value.trim()
+    };
+
+    const submitBtn = $('#ka-submit');
+    submitBtn.disabled = true;
+    $('#ka-results').classList.remove('show');
+    $('#ka-loading').style.display = 'flex';
+    let msgIdx = 0;
+    $('#ka-loading-text').textContent = loadingMessages[0];
+    const msgTimer = setInterval(() => {
+      msgIdx = (msgIdx + 1) % loadingMessages.length;
+      $('#ka-loading-text').textContent = loadingMessages[msgIdx];
+    }, 1400);
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2000,
+          messages: [{ role: "user", content: buildPrompt(input) }]
+        })
+      });
+
+      if (!response.ok) throw new Error('Request failed: ' + response.status);
+      const data = await response.json();
+
+      const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+      let raw = textBlocks.join('\n').trim();
+      raw = raw.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+
+      let plan;
+      try {
+        plan = JSON.parse(raw);
+      } catch (e) {
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) plan = JSON.parse(match[0]);
+        else throw new Error('Could not parse plan.');
+      }
+
+      renderPlan(plan, input);
+    } catch (err) {
+      console.error(err);
+      showError("Couldn't build the plan just now. Mind trying again?");
+    } finally {
+      clearInterval(msgTimer);
+      $('#ka-loading').style.display = 'none';
+      submitBtn.disabled = false;
+    }
+  }
+
+  function renderPlan(plan, input) {
+    const meals = plan.meals || {};
+    const grocery = plan.grocery_list || [];
+    const subs = plan.substitutions || [];
+    const budget = plan.budget || {};
+
+    const mealIcon = { breakfast: '☀', lunch: '◐', dinner: '☾' };
+
+    const mealsHtml = ['breakfast', 'lunch', 'dinner'].map(key => {
+      const m = meals[key] || {};
+      return `
+        <div class="ka-plate">
+          <div class="ka-plate-ring">${mealIcon[key] || '•'}</div>
+          <div class="ka-plate-meal">${key}</div>
+          <div class="ka-plate-name">${escapeHtml(m.name || '—')}</div>
+          <div class="ka-plate-desc">${escapeHtml(m.description || '')}</div>
+          <div class="ka-plate-time">${m.time_minutes ? m.time_minutes + ' min' : ''}</div>
+        </div>`;
+    }).join('');
+
+    const groceryHtml = grocery.map(g => `
+      <div class="ka-rline">
+        <span class="qty">${escapeHtml(g.quantity || '')}</span>
+        <span class="name">${escapeHtml(g.item || '')}</span>
+        <span class="cost">${input.currency}${(g.estimated_cost ?? 0)}</span>
+      </div>`).join('');
+
+    const total = typeof budget.estimated_total === 'number'
+      ? budget.estimated_total
+      : grocery.reduce((s, g) => s + (Number(g.estimated_cost) || 0), 0);
+
+    const subsHtml = subs.length ? subs.map(s => `
+      <div class="ka-sub-row">
+        <div class="ka-sub-swap">
+          <span class="ka-sub-orig">${escapeHtml(s.original || '')}</span>
+          <span class="ka-sub-arrow">→</span>
+          <span class="ka-sub-new">${escapeHtml(s.substitute || '')}</span>
+        </div>
+        <span class="ka-sub-reason">${escapeHtml(s.reason || '')}</span>
+      </div>`).join('') : `<div class="ka-sub-row"><span class="ka-sub-reason" style="margin-left:0;">No swaps needed today.</span></div>`;
+
+    const feasible = budget.feasible !== false;
+    const stampClass = feasible ? 'ok' : 'warn';
+    const stampText = feasible ? 'Budget OK' : 'Over Budget';
+
+    const html = `
+      <div class="ka-section-label">Today's plate</div>
+      <div class="ka-meals">${mealsHtml}</div>
+
+      <div class="ka-section-label">Grocery run</div>
+      <div class="ka-receipt">
+        <div class="ka-receipt-title">Grocery Ticket</div>
+        <div class="ka-receipt-sub">for ${escapeHtml(input.people)} · ${escapeHtml(input.diet)}</div>
+        <div class="ka-receipt-hr"></div>
+        ${groceryHtml || '<div class="ka-rline"><span class="name">Nothing to buy — you\'re stocked.</span></div>'}
+        <div class="ka-receipt-hr"></div>
+        <div class="ka-receipt-total"><span>Total</span><span>${input.currency}${total}</span></div>
+        <div class="ka-stamp ${stampClass}">${stampText}</div>
+        <div class="ka-budget-note">${escapeHtml(budget.notes || '')}</div>
+      </div>
+
+      <div class="ka-section-label">Swaps if you're short something</div>
+      <div class="ka-subs">${subsHtml}</div>
+
+      <button class="ka-again" id="ka-again">Plan a different day</button>
+    `;
+
+    $('#ka-results').innerHTML = html;
+    $('#ka-results').classList.add('show');
+    $('#ka-again').addEventListener('click', () => {
+      $('#ka-results').classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    $('#ka-results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('#ka-submit').addEventListener('click', generatePlan);
+})();
+</script>
